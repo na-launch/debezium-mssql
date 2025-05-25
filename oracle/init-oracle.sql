@@ -1,0 +1,23 @@
+-- Create Debezium user and grant required privileges
+CREATE USER debezium IDENTIFIED BY dbz;
+GRANT CONNECT, RESOURCE TO debezium;
+
+-- Enable minimal supplemental logging
+ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
+
+-- Enable supplemental logging for the HR.EMPLOYEES table
+ALTER TABLE hr.employees ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
+
+-- Grant required access to Debezium for LogMiner
+GRANT SELECT ON V_$LOG TO debezium;
+GRANT SELECT ON V_$LOGMNR_LOGS TO debezium;
+GRANT SELECT ON V_$LOGMNR_CONTENTS TO debezium;
+GRANT EXECUTE ON DBMS_LOGMNR TO debezium;
+GRANT SELECT ON V_$ARCHIVED_LOG TO debezium;
+GRANT SELECT ON V_$DATABASE TO debezium;
+GRANT SELECT ON SYS.V_$DATABASE TO debezium;
+GRANT SELECT ON V_$THREAD TO debezium;
+GRANT SELECT ON V_$PARAMETER TO debezium;
+GRANT SELECT ON V_$TRANSACTION TO debezium;
+GRANT SELECT ON V_$ARCHIVE_DEST_STATUS TO debezium;
+GRANT SELECT ON SYS.V_$ARCHIVE_DEST_STATUS TO debezium;
