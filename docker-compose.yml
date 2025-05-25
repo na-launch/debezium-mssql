@@ -114,23 +114,28 @@ services:
       timeout: 10s
       retries: 10
 
-  oracle:
-    image: gvenzl/oracle-free:23-slim
-    container_name: oracle
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
     ports:
-      - "1521:1521"
+      - "3306:3306"
     environment:
-      ORACLE_PASSWORD: oracle
-      APP_USER: debezium
-      APP_USER_PASSWORD: dbz
-    volumes:
-      - oracle-data:/opt/oracle/oradata
-      - ./oracle/init-oracle.sql:/container-entrypoint/init.sql
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: debezium
+      MYSQL_PASSWORD: dbz
+      MYSQL_DATABASE: inventory
+    command: >
+      --server-id=223344
+      --log-bin=mysql-bin
+      --binlog-format=ROW
+      --binlog-row-image=FULL
+      --gtid-mode=ON
+      --enforce-gtid-consistency=ON
+      --default-authentication-plugin=mysql_native_password
     healthcheck:
-      test: ["CMD-SHELL", "echo 'SELECT 1 FROM DUAL;' | sqlplus -s debezium/dbz@ORCLCDB || exit 1"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
       retries: 10
-
-volumes:
-  oracle-data:
+    volumes:
+      - ./mysql/init-mysql.sql:/docker-entrypoint-initdb.d/init-mysql.sql
