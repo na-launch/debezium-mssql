@@ -47,8 +47,33 @@ services:
       REST_ADVERTISED_HOST_NAME: connect
       PLUGIN_PATH: /kafka/connect
       TOPIC_NAMING_STRATEGY: io.debezium.schema.DefaultTopicNamingStrategy
+      MONGODB_HOST: mongodb
     volumes:
+      - ./drivers:/kafka/connect
+      - ./plugins/mongodb:/kafka/connect/mongodb
       - ./drivers/db2jcc4.jar:/kafka/connect/db2jcc4.jar
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # db2:
+  #   platform: linux/amd64
+  #   image: icr.io/db2_community/db2:11.5.8.0
+  #   container_name: db2
+  #   privileged: true
+  #   environment:
+  #     LICENSE: accept
+  #     DB2INST1_PASSWORD: password
+  #     DBNAME: TESTDB
+  #   ports:
+  #     - "50000:50000"
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "su - db2inst1 -c 'db2 connect to testdb' || exit 1"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 10
 
   postgres:
     image: debezium/postgres:15
@@ -69,6 +94,12 @@ services:
       - "max_wal_senders=4"
     volumes:
       - ./postgres/init-postgres.sql:/docker-entrypoint-initdb.d/init-postgres.sql
+      #- ./postgres/run-debezium.sh:/docker-entrypoint-initdb.d/run-debezium.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   sqlserver:
     platform: linux/amd64
@@ -82,6 +113,7 @@ services:
       MSSQL_AGENT_ENABLED: "true"
     volumes:
       - ./mssql/init-mssql.sql:/docker-entrypoint-initdb.d/init-mssql.sql
+      #- ./mssql/run-debezium.sh:/docker-entrypoint-initdb.d/run-debezium.sh
     command: >
       /bin/bash -c "
       /opt/mssql/bin/sqlservr &
@@ -97,22 +129,26 @@ services:
       timeout: 5s
       retries: 5
 
-  db2:
-    platform: linux/amd64
-    image: icr.io/db2_community/db2:11.5.8.0
-    container_name: db2
-    privileged: true
-    environment:
-      LICENSE: accept
-      DB2INST1_PASSWORD: password
-      DBNAME: TESTDB
-    ports:
-      - "50000:50000"
-    healthcheck:
-      test: ["CMD-SHELL", "su - db2inst1 -c 'db2 connect to testdb' || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 10
+  # mongodb:
+  #   image: mongo:6.0
+  #   container_name: mongodb
+  #   hostname: mongodb
+  #   ports:
+  #     - "27017:27017"
+  #   command:
+  #     - mongod
+  #     - --replSet
+  #     - rs0
+  #     - --bind_ip
+  #     - 0.0.0.0
+  #     - --noauth
+  #   volumes:
+  #     - ./mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+  #   healthcheck:
+  #     test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 10
 
   mysql:
     image: mysql:8.0
@@ -139,3 +175,4 @@ services:
       retries: 10
     volumes:
       - ./mysql/init-mysql.sql:/docker-entrypoint-initdb.d/init-mysql.sql
+      #- ./mysql/run-debezium.sh:/docker-entrypoint-initdb.d/run-debezium.sh
