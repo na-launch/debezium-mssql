@@ -25,7 +25,7 @@ GO
 CREATE TABLE dbo.users (
   id INT PRIMARY KEY IDENTITY(1,1),
   name NVARCHAR(100),
-  email NVARCHAR(100)
+  email NVARCHAR(100) CONSTRAINT UQ_email UNIQUE
 );
 GO
 EXEC sys.sp_cdc_enable_db;

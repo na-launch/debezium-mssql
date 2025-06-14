@@ -3,7 +3,7 @@ USE inventory;
 CREATE TABLE users (
   id INT PRIMARY KEY AUTO_INCREMENT,
   name VARCHAR(255),
-  email VARCHAR(255)
+  email VARCHAR(100) UNIQUE
 );
 
 INSERT INTO users (name, email) VALUES
